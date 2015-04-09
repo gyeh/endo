@@ -2,6 +2,7 @@ package endo
 
 import java.io.File
 import java.util.concurrent.{BlockingQueue, ConcurrentHashMap}
+import java.util.{TimerTask, Timer}
 
 import com.typesafe.scalalogging.Logger
 import endo.Endo.LazyEntryQueue
@@ -36,9 +37,25 @@ class Endo(dirName: String, maxEntries: Int, opt: Endo.Options) {
   // TODO: prob don't want to convert this
   private val queueMap = new ConcurrentHashMap[String, LazyEntryQueue]().asScala
 
-  val d = new File(dirName)
-  if (!d.exists()) d.mkdir()
-  preInitQueues()
+  private val dir = {
+    val d = new File(dirName)
+    if (!d.exists()) d.mkdir()
+    preInitQueues()
+    d
+  }
+
+  private val flushTimer = {
+    val task = new TimerTask{
+      override def run(): Unit = {
+        queueMap.values.foreach(_.get.flush())
+      }
+    }
+
+    val interval = opt.fsyncInterval.getOrElse(120.seconds).toMillis
+    val t = new Timer
+    t.scheduleAtFixedRate(task, interval, interval)
+    t
+  }
 
   def offer(payload: Payload, timeout: Duration = Duration.Inf, queueId: String = Endo.defaultId): Boolean = {
     val queue = getOrElseUpdate(queueId, EntryQueue(queueId, maxEntries, dirName, opt.segmentSize))
@@ -56,6 +73,8 @@ class Endo(dirName: String, maxEntries: Int, opt: Endo.Options) {
   }
 
   def close(): Unit = {
+    flushTimer.cancel()
+    
     queueMap.foreach { case((_, queue)) =>
       queue.get.close()
     }

@@ -8,6 +8,7 @@ import com.typesafe.scalalogging.Logger
 import endo.Record.RecordStats
 import endo.Segment.SegmentStats
 import org.slf4j.LoggerFactory
+import scala.collection.JavaConversions._
 
 import scala.concurrent.duration.Duration
 
@@ -135,7 +136,6 @@ protected class EntryQueue(val queueId: String, maxSize: Int, dirName: String, s
   }
 
   def stats: QueueStats = {
-    import scala.collection.JavaConversions._
     QueueStats(queueId,
       numEnqueued.get,
       numCompleted.get,
@@ -149,6 +149,10 @@ protected class EntryQueue(val queueId: String, maxSize: Int, dirName: String, s
 
   def retryRecord(record: Record, timeout: Duration): Boolean =
     queue.offer(record, timeout.toMillis, TimeUnit.MILLISECONDS)
+
+  def flush(): Unit = {
+    segments.values().toList.foreach(_.flush())
+  }
 
   private def createSegment(): Segment = {
     val id = nextSegmentId.getAndIncrement
