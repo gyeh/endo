@@ -6,7 +6,7 @@ import java.util.zip.CRC32
 import endo.Payload.{PayloadCorruptionException, Status}
 
 object Payload {
-  val headerLength = 14
+  val metadataSize = 15
 
   case class PayloadCorruptionException(msg: String) extends RuntimeException
 
@@ -31,7 +31,7 @@ protected class Payload(val buffer: ByteBuffer) {
    * ByteBuffer interface
    */
   def this(payload: ByteBuffer, activeFlag: Boolean, nextFlag: Boolean, status: Status.Value) {
-    this(ByteBuffer.allocate(Payload.headerLength + payload.limit + 1))
+    this(ByteBuffer.allocate(Payload.metadataSize + payload.limit))
     buffer.position(0)
     buffer.put(boolToByte(activeFlag))
     buffer.put(status.id.toByte)
@@ -50,7 +50,7 @@ protected class Payload(val buffer: ByteBuffer) {
    * Byte array interface
    */
   def this(payload: Array[Byte], activeFlag: Boolean, nextFlag: Boolean, status: Status.Value) {
-    this(ByteBuffer.allocate(Payload.headerLength + payload.length + 1))
+    this(ByteBuffer.allocate(Payload.metadataSize + payload.length))
     buffer.position(0)
     buffer.put(boolToByte(activeFlag))
     buffer.put(status.id.toByte)
@@ -64,17 +64,27 @@ protected class Payload(val buffer: ByteBuffer) {
   def setStatus(status: Status): Unit = buffer.duplicate().put(1, status.id.toByte)
 
   // accessors
+  def activeFlag: Boolean = byteToFlag(buffer.asReadOnlyBuffer().get(0))
   def status: Status = Status(buffer.asReadOnlyBuffer.get(1))
   def checkSum: Long = buffer.asReadOnlyBuffer.getLong(2)
   def payloadLength: Int = buffer.asReadOnlyBuffer.getInt(10)
-  def payload: ByteBuffer = slice(buffer.asReadOnlyBuffer(), Payload.headerLength, payloadLength)
-  def activeFlag: Boolean = byteToFlag(buffer.asReadOnlyBuffer().get(0))
-  def nextFlag: Boolean = byteToFlag(buffer.asReadOnlyBuffer().get(Payload.headerLength + payloadLength + 1))
+  def payload: ByteBuffer = slice(buffer.asReadOnlyBuffer(), Payload.metadataSize - 1, payloadLength)
+  def nextFlag: Boolean = byteToFlag(buffer.asReadOnlyBuffer().get(Payload.metadataSize + payloadLength - 1))
 
   def validate: Boolean = {
     val c = checkSum
     val d = calcCheckSum(payload, payloadLength)
     c == d
+  }
+
+  override def toString: String = {
+    s"""
+       | active: $activeFlag
+       | status: $status
+       | payloadLength: $payloadLength
+       | payload: $payload
+       | nextFlag: $nextFlag
+     """.stripMargin
   }
 
   private def boolToByte(flag: Boolean): Byte = if (flag) 1.toByte else 0.toByte

@@ -45,7 +45,7 @@ protected class Segment(file: File, size: Long, queue: EntryQueue) {
     this.synchronized {
       val pos = currPos.get
       val buffer = mmap.duplicate().position(pos).asInstanceOf[ByteBuffer]
-      val size = payload.payloadLength + Payload.headerLength
+      val size = payload.payloadLength + Payload.metadataSize
 
       if (buffer.remaining() > size) {
         buffer.put(payload.buffer)
@@ -79,6 +79,18 @@ protected class Segment(file: File, size: Long, queue: EntryQueue) {
     }
   }
 
+  @tailrec
+  final def getString(offset: Int = 0, acc: List[String] = Nil): String = {
+    val record = readRecord(offset)
+    record match {
+      case Some(r) =>
+        val nextPos = r.offset + r.length
+        getString(nextPos, r.toString :: acc)
+      case None =>
+        acc.reverse.mkString("\n")
+    }
+  }
+
   def read(offset: Int, length: Int): Payload = {
     withReadLock(rwLock) {
       val record = new Payload(slice(mmap.duplicate(), offset, length))
@@ -95,7 +107,7 @@ protected class Segment(file: File, size: Long, queue: EntryQueue) {
     if (payload.remaining() <= 0) {
       logger.debug("Properly reached end of segment")
       None
-    } else if (payload.remaining() < Payload.headerLength + 2) {
+    } else if (payload.remaining() < Payload.metadataSize + 2) {
       logger.error(s"Unexpected data found at end of segment: ${file.getName}!")
       None
     } else if (activeFlag != 1) {
@@ -105,7 +117,7 @@ protected class Segment(file: File, size: Long, queue: EntryQueue) {
       val statusFlag = payload.get()
       val checkSum = payload.getLong // TODO: need to use it to verify
       val length = payload.getInt
-      Some(Record(this, queue, offset, length + Payload.headerLength))
+      Some(Record(this, queue, offset, length + Payload.metadataSize))
     }
   }
 

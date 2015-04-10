@@ -151,7 +151,11 @@ protected class EntryQueue(val queueId: String, maxSize: Int, dirName: String, s
     queue.offer(record, timeout.toMillis, TimeUnit.MILLISECONDS)
 
   def flush(): Unit = {
-    segments.values().toList.foreach(_.flush())
+    segments.values().foreach(_.flush())
+  }
+
+  override def toString: String = {
+    segments.values().map(_.getString()).mkString("\n****** Segment *****\n", "\n****** Segment *****\n", "")
   }
 
   private def createSegment(): Segment = {

@@ -14,7 +14,7 @@ object Record {
   }
 }
 class Record(segment: Segment, queue: EntryQueue, val offset: Int, val length: Int) {
-  def payload: Payload = segment.read(offset,length)
+  def payload: Payload = segment.read(offset, length)
   // in-memory status reference to avoid mmap seek => must be in-sync with mmap
   // 'statusRef' is the authorative representation of 'status'
   private val statusRef = new AtomicReference[Status](payload.status)
@@ -44,6 +44,8 @@ class Record(segment: Segment, queue: EntryQueue, val offset: Int, val length: I
   }
 
   def stats: RecordStats = RecordStats(offset, length)
+
+  override def toString: String = payload.toString
 
   private def setStatus(status: Status): Unit = {
     statusRef.set(status)

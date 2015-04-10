@@ -74,7 +74,7 @@ class Endo(dirName: String, maxEntries: Int, opt: Endo.Options) {
 
   def close(): Unit = {
     flushTimer.cancel()
-    
+
     queueMap.foreach { case((_, queue)) =>
       queue.get.close()
     }
@@ -82,6 +82,10 @@ class Endo(dirName: String, maxEntries: Int, opt: Endo.Options) {
 
   def stats: Seq[QueueStats] = {
     queueMap.values.toList.map(_.get.stats)
+  }
+
+  override def toString: String = {
+    queueMap.values.toList.map(_.get.toString()).mkString("\n===== Queue =====\n", "\n===== Queue =====\n", "")
   }
 
   // necessary because scala stdlib "getOrElseUpdate" is not atomic
