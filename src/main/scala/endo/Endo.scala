@@ -52,7 +52,7 @@ class Endo(dirName: String, maxEntries: Int, opt: Endo.Options) {
     }
 
     val interval = opt.fsyncInterval.getOrElse(120.seconds).toMillis
-    val t = new Timer
+    val t = new Timer(true)
     t.scheduleAtFixedRate(task, interval, interval)
     t
   }
