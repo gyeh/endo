@@ -90,7 +90,10 @@ protected class EntryQueue(val queueId: String, maxSize: Int, dirName: String, s
     }
   }
 
-  def loadFromDisk(): Unit = {
+  /**
+   * Should only be called during initialization.
+   */
+  protected[endo] def loadFromDisk(): Unit = {
     this.synchronized {
       new File(dirName).listFiles().foreach { f =>
         """^_(\d+)$""".r.findFirstMatchIn(f.getName) match {

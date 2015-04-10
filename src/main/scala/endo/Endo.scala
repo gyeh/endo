@@ -44,17 +44,21 @@ class Endo(dirName: String, maxEntries: Int, opt: Endo.Options) {
     d
   }
 
-  private val flushTimer = {
-    val task = new TimerTask{
-      override def run(): Unit = {
-        queueMap.values.foreach(_.get.flush())
+  private val flushTimer: Option[Timer] = {
+    for {
+      interval <- opt.fsyncInterval
+    } yield {
+      val task = new TimerTask{
+        override def run(): Unit = {
+          queueMap.values.foreach(_.get.flush())
+        }
       }
-    }
 
-    val interval = opt.fsyncInterval.getOrElse(120.seconds).toMillis
-    val t = new Timer(true)
-    t.scheduleAtFixedRate(task, interval, interval)
-    t
+      val interval = opt.fsyncInterval.getOrElse(120.seconds).toMillis
+      val t = new Timer(true)
+      t.scheduleAtFixedRate(task, interval, interval)
+      t
+    }
   }
 
   def offer(payload: Payload, timeout: Duration = Duration.Inf, queueId: String = Endo.defaultId): Boolean = {
@@ -73,7 +77,7 @@ class Endo(dirName: String, maxEntries: Int, opt: Endo.Options) {
   }
 
   def close(): Unit = {
-    flushTimer.cancel()
+    flushTimer.foreach(_.cancel())
 
     queueMap.foreach { case((_, queue)) =>
       queue.get.close()
