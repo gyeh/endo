@@ -1,6 +1,6 @@
 # Endo
 
-Endo is a concurrent, boundeded, on-disk blocking queue for the JVM with simple 'offer'/'poll' semantics. Useful for long-lived queuing operations within volatile environments.
+Endo is a concurrent, bounded, on-disk blocking queue for the JVM with simple 'offer'/'poll' semantics. Useful for long-lived queuing operations within volatile environments.
 
 Endo is reasonably fast -- backed by memory-map files, with configurable fsync strategies.
 
