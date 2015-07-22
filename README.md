@@ -41,9 +41,9 @@ The Endo queue is internally represented by a series of memory-mapped files, whi
 actual binary payloads of queue entries. New entries are 'offered' to a single mmap'd file until the
 configured max size is reached. Subsequently a new mmap'd file is created. 
 
-The memory-mapped files can be fsynced through two different ways: 
-  1) an option to fsync after every write 
-  2) a configurable background job to fsync all mmap'd files to disk.
+The memory-mapped files can be fsynced to through two different ways: 
+  1. An option to fsync after every write 
+  2. A configurable background job to fsync all mmap'd files to disk every X seconds.
   
 In addition, there is an in-memory queue which is contains the in-memory references which 
 corresponds 1:1 to the mmap'd binary payloads. This in-memory queue effectively provides the
