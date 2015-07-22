@@ -25,7 +25,7 @@ endo.offer(Payload(ByteBuffer.wrap("testValue".getBytes)))
 // Poll is a blocking read, waiting until an entry is available or a timeout occurs.
 // If a Record is retrieved, the record is exclusively owned by the caller process 
 // and no other process can manipulate the record.
-val record = endo.poll().get
+val record: Record = endo.poll().get
 
 // Get the binary blob referenced by the Record
 val payload: ByteBuffer = record.payload.buffer 
