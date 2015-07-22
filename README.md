@@ -12,15 +12,19 @@ Endo is reasonably fast -- backed by memory-map files, with configurable fsync s
 ```scala
 import endo.Endo
 
-val options = Options(segmentSize = 64 * 1024 * 1024 , fsyncInterval = Some(1.minute), fsyncEnabled = false)
+val options = Options(segmentSize = 64 * 1024 * 1024 , 
+                      fsyncInterval = Some(1.minute), 
+                      fsyncEnabled = false)
+                      
 val endo = Endo(dirName = "queue_files", maxEntries = 100, opt = options)
 
-// Offer is a blocking write. It will block if the queue is full. A timeout can be configured.
+// Offer is a blocking write. It will block if the queue is full. 
+// A timeout can be configured.
 endo.offer(Payload(ByteBuffer.wrap("testValue".getBytes)))
 
 // Poll is a blocking read, waiting until an entry is available or a timeout occurs.
-// If a Record is retrieved, the record is exclusively owned by the caller process and no other process
-// can manipulate the record.
+// If a Record is retrieved, the record is exclusively owned by the caller process 
+// and no other process can manipulate the record.
 val record = endo.poll().get
 
 // Get the binary blob referenced by the Record
