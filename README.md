@@ -12,7 +12,7 @@ Endo is reasonably fast -- backed by memory-map files, with configurable fsync s
 ```scala
 import endo.Endo
 
-val options = Options(segmentSize = 64 * 1024 * 1024 , 
+val options = Options(segmentSize = 64 * 1024 * 1024, 
                       fsyncInterval = Some(1.minute), 
                       fsyncEnabled = false)
                       
