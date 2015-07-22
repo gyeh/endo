@@ -16,7 +16,8 @@ object BuildSettings extends Build {
     parallelExecution in Test := false,
     libraryDependencies :=
       Seq(
-        "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
+        "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
+        "org.scalatest" %%  "scalatest" % "2.2.4" % "test"
       )
   )
 }

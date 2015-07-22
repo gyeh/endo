@@ -1,16 +1,14 @@
 package endo
 
 import java.io.File
-import java.util.concurrent.{BlockingQueue, ConcurrentHashMap}
+import java.util.concurrent.ConcurrentHashMap
 import java.util.{TimerTask, Timer}
 
 import com.typesafe.scalalogging.Logger
-import endo.Endo.LazyEntryQueue
 import endo.EntryQueue.QueueStats
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
-import scala.util.Try
 import collection.JavaConverters._
 
 object Endo {

@@ -119,8 +119,9 @@ protected class EntryQueue(val queueId: String, maxSize: Int, dirName: String, s
         val records = segment.initRecords()
 
         records.foreach { r =>
+          // don't add completed records to queue, await clean-up
           if (!r.isCompleted) {
-            r.unclaimed()
+            r.unclaimed() // by default, 'unclaim' pre-existing entries
             queue.add(r)
             numEnqueued.incrementAndGet()
           }
