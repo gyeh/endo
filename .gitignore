@@ -1,6 +1,9 @@
 *.class
 *.log
 
+# endo specific
+test_endo/*
+
 # sbt specific
 dist/*
 target/
