@@ -33,6 +33,9 @@ object Segment {
   }
 }
 
+/**
+ * Manages one of many memory-mapped files associated with an 'EntryQueue'
+ */
 protected class Segment(file: File, size: Long, queue: EntryQueue) {
   import Segment._
 
@@ -41,6 +44,9 @@ protected class Segment(file: File, size: Long, queue: EntryQueue) {
   private val rwLock = new ReentrantReadWriteLock() // protects reads when unmap occurs, should not read an unmapped buffer!!!
   private val numEntries = new AtomicLong(0)
 
+  /**
+   * Append payload to mmap'd segment
+   */
   def append(payload: Payload, fsync: Boolean): Option[Record] = {
     this.synchronized {
       val pos = currPos.get
@@ -79,6 +85,9 @@ protected class Segment(file: File, size: Long, queue: EntryQueue) {
     }
   }
 
+  /**
+   * Get string representation of segment. Useful for debugging purposes.
+   */
   @tailrec
   final def getString(offset: Int = 0, acc: List[String] = Nil): String = {
     val record = readRecord(offset)
@@ -120,7 +129,6 @@ protected class Segment(file: File, size: Long, queue: EntryQueue) {
       Some(Record(this, queue, offset, length + Payload.metadataSize))
     }
   }
-
 
   def flush(): Unit = {
     this.synchronized {

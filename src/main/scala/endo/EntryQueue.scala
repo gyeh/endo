@@ -23,6 +23,13 @@ object EntryQueue {
                         segments: Seq[SegmentStats],
                         records: Seq[RecordStats])
 
+  /**
+   * Endo Factory
+   * @param queueId Unique identifer
+   * @param maxSize Max bounded size of queue
+   * @param dirName Location of on-disk files
+   * @param segmentSize Segment size in MB
+   */
   def apply(queueId: String, maxSize: Int, dirName: String, segmentSize: Int): EntryQueue = {
     val name = s"$dirName/$queueId"
     val d = new File(name)
@@ -32,13 +39,15 @@ object EntryQueue {
   }
 }
 
+/**
+ * Logical representation of a queue
+ */
 protected class EntryQueue(val queueId: String, maxSize: Int, dirName: String, segmentSize: Int) {
   import EntryQueue._
 
   private val queue = new LinkedBlockingQueue[Record](maxSize)
 
   // append to last slab, read from first slab
-  // TODO consider using ConcurrentLinkedQueue
   private val segments = new ConcurrentSkipListMap[Integer, Segment]()
   private val nextSegmentId = new AtomicInteger(0)
 
@@ -91,7 +100,7 @@ protected class EntryQueue(val queueId: String, maxSize: Int, dirName: String, s
   }
 
   /**
-   * Should only be called during initialization.
+   * Load queue from existing disk files. Should only be called during initialization.
    */
   protected[endo] def loadFromDisk(): Unit = {
     this.synchronized {
@@ -112,7 +121,6 @@ protected class EntryQueue(val queueId: String, maxSize: Int, dirName: String, s
       }
 
       // init queue with only non-completed tasks
-      // TODO make sure in order
       val itr = segments.values().iterator()
       while(itr.hasNext){
         val segment = itr.next()
@@ -130,7 +138,6 @@ protected class EntryQueue(val queueId: String, maxSize: Int, dirName: String, s
     }
   }
 
-  // TODO need to be thread safe
   def close(): Unit = {
     val itr = segments.values().iterator()
     while(itr.hasNext()){
@@ -148,13 +155,14 @@ protected class EntryQueue(val queueId: String, maxSize: Int, dirName: String, s
       queue.toList.map(_.stats))
   }
 
-  def incTaskCompleted(): Long = numCompleted.incrementAndGet()
-  def incTaskRetry(): Long = numRetried.incrementAndGet()
+  protected[endo] def incTaskCompleted(): Long = numCompleted.incrementAndGet()
 
-  def retryRecord(record: Record, timeout: Duration): Boolean =
+  protected[endo] def incTaskRetry(): Long = numRetried.incrementAndGet()
+
+  protected[endo] def retryRecord(record: Record, timeout: Duration): Boolean =
     queue.offer(record, timeout.toMillis, TimeUnit.MILLISECONDS)
 
-  def flush(): Unit = {
+  protected[endo] def flush(): Unit = {
     segments.values().foreach(_.flush())
   }
 

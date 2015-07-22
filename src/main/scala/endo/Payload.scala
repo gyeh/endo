@@ -24,7 +24,10 @@ object Payload {
   }
 }
 
-protected class Payload(val buffer: ByteBuffer) {
+/**
+ * Input object representation which is 'offered' to the queue, containing the binary blob.
+ */
+class Payload(val buffer: ByteBuffer) {
   import Payload.Status._
 
   /**
